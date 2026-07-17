@@ -5,4 +5,5 @@ export interface CaptchaStage {
   type: CaptchaStageType;
   passed: boolean;
   timeTaken?: number;
+  userAnswer?: unknown;
 }

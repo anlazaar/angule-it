@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-math-challenge',
@@ -96,6 +97,7 @@ import { CommonModule } from '@angular/common';
   ],
 })
 export class MathChallengeComponent implements OnInit {
+  constructor(private cdr: ChangeDetectorRef) {}
   @Output() passed = new EventEmitter<boolean>();
 
   num1 = 0;
@@ -139,8 +141,11 @@ export class MathChallengeComponent implements OnInit {
       this.passed.emit(true);
     } else {
       this.hasError = true;
-      this.answerControl.setValue(null);
-      setTimeout(() => this.generateEquation(), 500);
+
+      setTimeout(() => {
+        this.generateEquation();
+        this.cdr.detectChanges();
+      }, 500);
     }
   }
 }

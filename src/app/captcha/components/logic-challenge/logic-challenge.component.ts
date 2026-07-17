@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef } from '@angular/core';
 
 interface LogicQuestion {
   question: string;
@@ -102,6 +103,7 @@ interface LogicQuestion {
   ],
 })
 export class LogicChallengeComponent implements OnInit {
+  constructor(private cdr: ChangeDetectorRef) {}
   @Output() passed = new EventEmitter<boolean>();
 
   questions: LogicQuestion[] = [
@@ -278,7 +280,11 @@ export class LogicChallengeComponent implements OnInit {
       this.passed.emit(true);
     } else {
       this.hasError = true;
-      setTimeout(() => this.generateQuestion(), 800);
+
+      setTimeout(() => {
+        this.generateQuestion();
+        this.cdr.detectChanges();
+      }, 800);
     }
   }
 }
