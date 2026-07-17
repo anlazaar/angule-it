@@ -253,7 +253,6 @@ export class ImageChallengeComponent implements OnInit {
       this.passed.emit(true);
       return;
     }
-
     this.hasError = true;
     this.errorMessage = 'Incorrect selection, please try again.';
 

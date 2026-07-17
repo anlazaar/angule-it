@@ -16,7 +16,7 @@ import { ImageChallengeComponent } from './components/image-challenge/image-chal
     MathChallengeComponent,
     LogicChallengeComponent,
     PatternChallengeComponent,
-    ImageChallengeComponent
+    ImageChallengeComponent,
   ],
   template: `
     <div class="card captcha-card">
@@ -31,108 +31,179 @@ import { ImageChallengeComponent } from './components/image-challenge/image-chal
             (click)="goBack()"
             aria-label="Go back to previous challenge"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             Back
           </button>
-          <span class="stage-text" [class.no-back]="state.currentStageIndex() === 0">
-            Step {{ state.currentStageIndex() + 1 }} of {{ state.stages().length }}
+          <span
+            class="stage-text"
+            [class.no-back]="state.currentStageIndex() === 0"
+          >
+            Step {{ state.currentStageIndex() + 1 }} of
+            {{ state.stages().length }}
           </span>
-          <span class="secure-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          <button
+            class="btn-next"
+            *ngIf="state.currentStageIndex() < state.stages().length - 1"
+            [disabled]="!currentStage?.passed"
+            (click)="goNext()"
+            aria-label="Go to next challenge"
+          >
+            Next
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-            Secure
-          </span>
+          </button>
         </div>
       </div>
 
-      <div class="challenge-container" [class.slide-in]="isAnimating" [ngSwitch]="currentStage?.type || ''">
-        <app-math-challenge *ngSwitchCase="'math'" (passed)="onStagePassed($event)"></app-math-challenge>
-        <app-logic-challenge *ngSwitchCase="'logic'" (passed)="onStagePassed($event)"></app-logic-challenge>
-        <app-pattern-challenge *ngSwitchCase="'pattern'" (passed)="onStagePassed($event)"></app-pattern-challenge>
-        <app-image-challenge *ngSwitchCase="'image'" (passed)="onStagePassed($event)"></app-image-challenge>
+      <div
+        class="challenge-container"
+        [class.slide-in]="isAnimating"
+        [ngSwitch]="currentStage?.type || ''"
+      >
+        <app-math-challenge
+          *ngSwitchCase="'math'"
+          (passed)="onStagePassed($event)"
+        ></app-math-challenge>
+        <app-logic-challenge
+          *ngSwitchCase="'logic'"
+          (passed)="onStagePassed($event)"
+        ></app-logic-challenge>
+        <app-pattern-challenge
+          *ngSwitchCase="'pattern'"
+          (passed)="onStagePassed($event)"
+        ></app-pattern-challenge>
+        <app-image-challenge
+          *ngSwitchCase="'image'"
+          (passed)="onStagePassed($event)"
+        ></app-image-challenge>
       </div>
     </div>
   `,
-  styles: [`
-    .captcha-card {
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .captcha-header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .progress-bar-container {
-      width: 100%;
-      height: 6px;
-      background-color: rgba(0, 0, 0, 0.04);
-      border-radius: var(--radius-full);
-      overflow: hidden;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #10b981, #34d399);
-      border-radius: var(--radius-full);
-      transition: width var(--transition-normal);
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-    }
-    .stage-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-    .stage-text {
-      flex: 1;
-      text-align: center;
-    }
-    .stage-text.no-back {
-      text-align: left;
-      flex: 1;
-    }
-    .secure-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--success-color);
-    }
-    .btn-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: none;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-full);
-      padding: 5px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      white-space: nowrap;
-    }
-    .btn-back:hover {
-      border-color: var(--primary-color);
-      color: var(--primary-color);
-      background-color: rgba(15, 23, 42, 0.04);
-    }
-    .challenge-container {
-      animation: fade-in var(--transition-normal) forwards;
-    }
-    .challenge-container.slide-in {
-      animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-  `]
+  styles: [
+    `
+      .captcha-card {
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .captcha-header {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .progress-bar-container {
+        width: 100%;
+        height: 6px;
+        background-color: rgba(0, 0, 0, 0.04);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #34d399);
+        border-radius: var(--radius-full);
+        transition: width var(--transition-normal);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+      }
+      .stage-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+      .stage-text {
+        flex: 1;
+        text-align: center;
+      }
+      .stage-text.no-back {
+        text-align: left;
+        flex: 1;
+      }
+      .secure-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--success-color);
+      }
+      .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-full);
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+      }
+      .btn-back:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background-color: rgba(15, 23, 42, 0.04);
+      }
+      .challenge-container {
+        animation: fade-in var(--transition-normal) forwards;
+      }
+      .challenge-container.slide-in {
+        animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .btn-next {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        border-radius: var(--radius-full);
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: white;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+      }
+
+      .btn-next:hover:not(:disabled) {
+        filter: brightness(1.05);
+      }
+
+      .btn-next:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+    `,
+  ],
 })
 export class CaptchaComponent implements OnInit {
   state = inject(CaptchaStateService);
@@ -142,7 +213,9 @@ export class CaptchaComponent implements OnInit {
   private stageStartTime = 0;
   isAnimating = false;
 
-  get currentStage(): import('../models/captcha-stage.model').CaptchaStage | undefined {
+  get currentStage():
+    | import('../models/captcha-stage.model').CaptchaStage
+    | undefined {
     return this.state.stages()[this.state.currentStageIndex()];
   }
 
@@ -180,6 +253,12 @@ export class CaptchaComponent implements OnInit {
 
   goBack() {
     this.state.goToPreviousStage();
+    this.triggerAnimation();
+    this.stageStartTime = Date.now();
+  }
+
+  goNext() {
+    this.state.goToNextStage();
     this.triggerAnimation();
     this.stageStartTime = Date.now();
   }

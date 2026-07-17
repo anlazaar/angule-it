@@ -64,30 +64,19 @@ export class CaptchaStateService {
   }
 
   goToPreviousStage() {
-    const currentIndex = this.currentStageIndex();
-    if (currentIndex <= 0) return;
+    if (this.currentStageIndex() > 0) {
+      this.currentStageIndex.update((i) => i - 1);
+      this.saveState();
+    }
+  }
 
-    this.isCompleted.set(false);
-    this.score.set(0);
+  goToNextStage() {
+    const current = this.currentStageIndex();
 
-    const currentStages = [...this.stages()];
-
-    currentStages[currentIndex] = {
-      ...currentStages[currentIndex],
-      passed: false,
-      timeTaken: undefined,
-    };
-
-    currentStages[currentIndex - 1] = {
-      ...currentStages[currentIndex - 1],
-      passed: false,
-      timeTaken: undefined,
-    };
-
-    this.stages.set(currentStages);
-    this.currentStageIndex.set(currentIndex - 1);
-
-    this.saveState();
+    if (current < this.stages().length - 1 && this.stages()[current].passed) {
+      this.currentStageIndex.set(current + 1);
+      this.saveState();
+    }
   }
 
   reset() {
