@@ -1,10 +1,10 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ChangeDetectorRef } from '@angular/core';
 
-interface PatternItem {
-  icon: SafeHtml;
+export type ShapeType = 'circle' | 'square' | 'triangle' | 'hexagon';
+
+export interface PatternItem {
+  shape: ShapeType;
   isOdd: boolean;
 }
 
@@ -15,20 +15,47 @@ interface PatternItem {
   template: `
     <div class="challenge-content">
       <h2 class="challenge-title">Odd One Out</h2>
-      <p class="challenge-desc">Select the item that does not belong.</p>
+      <p class="challenge-desc">Select the shape that does not belong.</p>
 
       <div class="pattern-grid">
-        <button
-          *ngFor="let item of items; let i = index"
-          class="item-btn"
-          [class.invalid]="selectedIndex === i && hasError"
-          (click)="verify(i)"
-        >
-          <div class="icon" [innerHTML]="item.icon"></div>
-        </button>
+        @for (item of items(); track $index) {
+          <button
+            class="item-btn"
+            [class.invalid]="selectedIndex() === $index && hasError()"
+            (click)="verify($index)"
+            [aria-label]="'Select item ' + ($index + 1)"
+          >
+            <div class="icon">
+              @switch (item.shape) {
+                @case ('circle') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                }
+                @case ('square') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  </svg>
+                }
+                @case ('triangle') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  </svg>
+                }
+                @case ('hexagon') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  </svg>
+                }
+              }
+            </div>
+          </button>
+        }
       </div>
 
-      <p class="error-msg" *ngIf="hasError">Incorrect, please try again.</p>
+      @if (hasError()) {
+        <p class="error-msg">Incorrect choice, please try again.</p>
+      }
     </div>
   `,
   styles: [
@@ -45,6 +72,7 @@ interface PatternItem {
       .challenge-desc {
         color: var(--text-secondary);
         font-size: 14px;
+        margin-top: -12px;
       }
       .pattern-grid {
         display: grid;
@@ -66,10 +94,11 @@ interface PatternItem {
       .item-btn:hover {
         border-color: var(--primary-color);
         box-shadow: var(--shadow-sm);
+        transform: translateY(-2px);
       }
       .item-btn .icon {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -85,93 +114,66 @@ interface PatternItem {
       }
       .error-msg {
         color: var(--danger-color);
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 500;
         text-align: center;
       }
       @keyframes shake {
-        10%,
-        90% {
-          transform: translate3d(-1px, 0, 0);
-        }
-        20%,
-        80% {
-          transform: translate3d(2px, 0, 0);
-        }
-        30%,
-        50%,
-        70% {
-          transform: translate3d(-4px, 0, 0);
-        }
-        40%,
-        60% {
-          transform: translate3d(4px, 0, 0);
-        }
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
       }
     `,
   ],
 })
 export class PatternChallengeComponent implements OnInit {
-  @Output() passed = new EventEmitter<boolean>();
+  passed = output<boolean>();
 
-  items: PatternItem[] = [];
-  hasError = false;
-  selectedIndex: number | null = null;
+  items = signal<PatternItem[]>([]);
+  hasError = signal(false);
+  selectedIndex = signal<number | null>(null);
 
-  private svgShapes = [
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>',
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>',
-  ];
-
-  constructor(
-    private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
-  ) {}
+  private availableShapes: ShapeType[] = ['circle', 'square', 'triangle', 'hexagon'];
 
   ngOnInit() {
     this.generatePattern();
   }
 
   generatePattern() {
-    const shuffledShapes = [...this.svgShapes].sort(() => 0.5 - Math.random());
+    const shuffled = [...this.availableShapes].sort(() => 0.5 - Math.random());
+    const commonShape = shuffled[0];
+    const oddShape = shuffled[1];
 
-    const commonShape = this.sanitizer.bypassSecurityTrustHtml(
-      shuffledShapes[0]
-    );
-    const oddShape = this.sanitizer.bypassSecurityTrustHtml(shuffledShapes[1]);
-
-    const items: PatternItem[] = Array.from({ length: 6 }, () => ({
-      icon: commonShape,
+    const grid: PatternItem[] = Array.from({ length: 6 }, () => ({
+      shape: commonShape,
       isOdd: false,
     }));
 
     const oddIndex = Math.floor(Math.random() * 6);
-
-    items[oddIndex] = {
-      icon: oddShape,
+    grid[oddIndex] = {
+      shape: oddShape,
       isOdd: true,
     };
 
-    this.items = [...items];
-
-    this.selectedIndex = null;
-    this.hasError = false;
+    this.items.set(grid);
+    this.selectedIndex.set(null);
+    this.hasError.set(false);
   }
 
   verify(index: number) {
-    this.selectedIndex = index;
+    this.selectedIndex.set(index);
+    const item = this.items()[index];
 
-    if (this.items[index].isOdd) {
+    if (item && item.isOdd) {
       this.passed.emit(true);
       return;
     }
 
-    this.hasError = true;
-
+    this.hasError.set(true);
     setTimeout(() => {
       this.generatePattern();
-      this.cdr.detectChanges();
-    }, 800);
+    }, 700);
   }
 }
+

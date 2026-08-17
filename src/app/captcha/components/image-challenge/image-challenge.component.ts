@@ -1,8 +1,7 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef } from '@angular/core';
 
-interface ImageItem {
+export interface ImageItem {
   id: number;
   type: 'circle' | 'square' | 'triangle';
   color: string;
@@ -18,54 +17,52 @@ interface ImageItem {
     <div class="challenge-content">
       <h2 class="challenge-title">Visual Selection</h2>
       <p class="challenge-desc">
-        Select all <strong>{{ targetCategory }}</strong
-        >.
+        Select all <strong>{{ targetCategory() }}</strong>.
       </p>
 
       <div class="image-grid">
-        <div
-          *ngFor="let img of images; let i = index"
-          class="image-item"
-          [class.selected]="img.selected"
-          (click)="toggleSelection(i)"
-        >
-          <div class="shape-container">
-            <div
-              *ngIf="img.type === 'circle'"
-              class="shape circle"
-              [style.background-color]="img.color"
-            ></div>
-            <div
-              *ngIf="img.type === 'square'"
-              class="shape square"
-              [style.background-color]="img.color"
-            ></div>
-            <div
-              *ngIf="img.type === 'triangle'"
-              class="shape triangle"
-              [style.border-bottom-color]="img.color"
-            ></div>
+        @for (img of images(); track img.id; let i = $index) {
+          <div
+            class="image-item"
+            [class.selected]="img.selected"
+            (click)="toggleSelection(i)"
+          >
+            <div class="shape-container">
+              @switch (img.type) {
+                @case ('circle') {
+                  <div class="shape circle" [style.background-color]="img.color"></div>
+                }
+                @case ('square') {
+                  <div class="shape square" [style.background-color]="img.color"></div>
+                }
+                @case ('triangle') {
+                  <div class="shape triangle" [style.border-bottom-color]="img.color"></div>
+                }
+              }
+            </div>
+            <div class="selection-overlay">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
           </div>
-          <div class="selection-overlay">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-        </div>
+        }
       </div>
 
-      <p class="error-msg" *ngIf="hasError">{{ errorMessage }}</p>
+      @if (hasError()) {
+        <p class="error-msg">{{ errorMessage() }}</p>
+      }
 
       <button class="btn btn-primary verify-btn" (click)="verify()">
         Verify Selection
@@ -86,23 +83,26 @@ interface ImageItem {
       .challenge-desc {
         color: var(--text-secondary);
         font-size: 14px;
+        margin-top: -12px;
       }
       .challenge-desc strong {
-        color: var(--text-primary);
+        color: var(--primary-color);
+        font-weight: 600;
       }
       .image-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        gap: 12px;
       }
       .image-item {
         aspect-ratio: 1;
         position: relative;
         cursor: pointer;
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
         overflow: hidden;
         background-color: var(--bg-color);
         border: 1px solid var(--border-color);
+        transition: all var(--transition-fast);
       }
       .shape-container {
         width: 100%;
@@ -113,35 +113,32 @@ interface ImageItem {
         transition: transform var(--transition-normal);
       }
       .image-item:hover .shape-container {
-        transform: scale(1.05);
+        transform: scale(1.06);
       }
 
       .shape {
-        width: 60px;
-        height: 60px;
+        width: 54px;
+        height: 54px;
       }
       .circle {
         border-radius: 50%;
       }
       .square {
-        border-radius: 8px;
+        border-radius: 10px;
       }
       .triangle {
         width: 0;
         height: 0;
         background-color: transparent !important;
-        border-left: 35px solid transparent;
-        border-right: 35px solid transparent;
-        border-bottom: 60px solid;
+        border-left: 30px solid transparent;
+        border-right: 30px solid transparent;
+        border-bottom: 54px solid;
       }
 
       .selection-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.4);
+        inset: 0;
+        background-color: rgba(15, 23, 42, 0.45);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -149,7 +146,7 @@ interface ImageItem {
         opacity: 0;
         transition: opacity var(--transition-fast);
         border: 3px solid var(--primary-color);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
       }
       .image-item.selected .selection-overlay {
         opacity: 1;
@@ -159,24 +156,24 @@ interface ImageItem {
       }
       .error-msg {
         color: var(--danger-color);
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 500;
         text-align: center;
       }
       .verify-btn {
         width: 100%;
-        margin-top: 8px;
+        margin-top: 4px;
       }
     `,
   ],
 })
 export class ImageChallengeComponent implements OnInit {
-  constructor(private cdr: ChangeDetectorRef) {}
-  @Output() passed = new EventEmitter<boolean>();
+  passed = output<boolean>();
 
-  targetCategory = '';
-  images: ImageItem[] = [];
-  hasError = false;
-  errorMessage = '';
+  targetCategory = signal('');
+  images = signal<ImageItem[]>([]);
+  hasError = signal(false);
+  errorMessage = signal('');
 
   private shapes: ('circle' | 'square' | 'triangle')[] = [
     'circle',
@@ -192,12 +189,12 @@ export class ImageChallengeComponent implements OnInit {
   generateGrid() {
     const targetShape =
       this.shapes[Math.floor(Math.random() * this.shapes.length)];
-    this.targetCategory = targetShape + 's';
+    this.targetCategory.set(targetShape + 's');
 
-    this.images = Array(9)
+    let list: ImageItem[] = Array(9)
       .fill(null)
       .map((_, i) => {
-        const isTarget = Math.random() > 0.6;
+        const isTarget = Math.random() > 0.55;
         let shape = targetShape;
         if (!isTarget) {
           const otherShapes = this.shapes.filter((s) => s !== targetShape);
@@ -213,52 +210,50 @@ export class ImageChallengeComponent implements OnInit {
       });
 
     // Ensure at least one target
-    if (!this.images.some((img) => img.isTarget)) {
-      this.images[0].isTarget = true;
-      this.images[0].type = targetShape;
+    if (!list.some((img) => img.isTarget)) {
+      list[0].isTarget = true;
+      list[0].type = targetShape;
     }
 
-    // Shuffle
-    const shuffled = [...this.images].sort(() => Math.random() - 0.5);
+    // Shuffle grid items
+    list = [...list].sort(() => Math.random() - 0.5);
+    this.images.set(list);
 
-    this.images = shuffled.map((img) => ({
-      ...img,
-      selected: false,
-    }));
-
-    this.hasError = false;
-    this.errorMessage = '';
+    this.hasError.set(false);
+    this.errorMessage.set('');
   }
 
   toggleSelection(index: number) {
-    this.images = this.images.map((img, i) =>
+    const updated = this.images().map((img, i) =>
       i === index ? { ...img, selected: !img.selected } : img
     );
-
-    this.hasError = false;
+    this.images.set(updated);
+    this.hasError.set(false);
   }
 
   verify() {
-    const hasSelection = this.images.some((img) => img.selected);
+    const currentList = this.images();
+    const hasSelection = currentList.some((img) => img.selected);
 
     if (!hasSelection) {
-      this.hasError = true;
-      this.errorMessage = 'Please select at least one image before verifying.';
+      this.hasError.set(true);
+      this.errorMessage.set('Please select at least one item before verifying.');
       return;
     }
 
-    const isCorrect = this.images.every((img) => img.selected === img.isTarget);
+    const isCorrect = currentList.every((img) => img.selected === img.isTarget);
 
     if (isCorrect) {
       this.passed.emit(true);
       return;
     }
-    this.hasError = true;
-    this.errorMessage = 'Incorrect selection, please try again.';
+
+    this.hasError.set(true);
+    this.errorMessage.set('Incorrect selection, please try again.');
 
     setTimeout(() => {
       this.generateGrid();
-      this.cdr.detectChanges();
-    }, 800);
+    }, 750);
   }
 }
+

@@ -4,7 +4,7 @@ import { ImageChallengeComponent } from './image-challenge.component';
 describe('ImageChallengeComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ImageChallengeComponent]
+      imports: [ImageChallengeComponent],
     }).compileComponents();
   });
 
@@ -16,13 +16,13 @@ describe('ImageChallengeComponent', () => {
   it('should generate a 9-item grid on init', () => {
     const fixture = TestBed.createComponent(ImageChallengeComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.images.length).toBe(9);
+    expect(fixture.componentInstance.images().length).toBe(9);
   });
 
   it('should set a targetCategory on init', () => {
     const fixture = TestBed.createComponent(ImageChallengeComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.targetCategory).toBeTruthy();
+    expect(fixture.componentInstance.targetCategory()).toBeTruthy();
   });
 
   it('should show error and not emit when verifying with no selection', () => {
@@ -33,8 +33,8 @@ describe('ImageChallengeComponent', () => {
     spyOn(component.passed, 'emit');
     component.verify();
 
-    expect(component.hasError).toBeTrue();
-    expect(component.errorMessage).toContain('Please select at least one');
+    expect(component.hasError()).toBeTrue();
+    expect(component.errorMessage()).toContain('Please select at least one');
     expect(component.passed.emit).not.toHaveBeenCalled();
   });
 
@@ -44,9 +44,11 @@ describe('ImageChallengeComponent', () => {
     const component = fixture.componentInstance;
 
     // Select exactly the target items
-    component.images.forEach((img, i) => {
-      component.images[i].selected = img.isTarget;
-    });
+    const updated = component.images().map((img) => ({
+      ...img,
+      selected: img.isTarget,
+    }));
+    component.images.set(updated);
 
     spyOn(component.passed, 'emit');
     component.verify();
@@ -54,26 +56,27 @@ describe('ImageChallengeComponent', () => {
     expect(component.passed.emit).toHaveBeenCalledWith(true);
   });
 
-  it('should show error and reset selection when answer is wrong', () => {
+  it('should show error when answer is wrong', () => {
     const fixture = TestBed.createComponent(ImageChallengeComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
 
-    // Select wrong items (non-targets only)
-    const hasNonTarget = component.images.some(img => !img.isTarget);
+    const currentImages = component.images();
+    const hasNonTarget = currentImages.some((img) => !img.isTarget);
     if (hasNonTarget) {
-      component.images.forEach((img, i) => {
-        component.images[i].selected = !img.isTarget;
-      });
+      const updated = currentImages.map((img) => ({
+        ...img,
+        selected: !img.isTarget,
+      }));
+      component.images.set(updated);
 
       spyOn(component.passed, 'emit');
       component.verify();
 
-      expect(component.hasError).toBeTrue();
-      expect(component.images.every(img => !img.selected)).toBeTrue();
+      expect(component.hasError()).toBeTrue();
     } else {
-      // Edge case: all are targets; skip
       expect(true).toBeTrue();
     }
   });
 });
+

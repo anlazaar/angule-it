@@ -4,7 +4,7 @@ import { MathChallengeComponent } from './math-challenge.component';
 describe('MathChallengeComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MathChallengeComponent]
+      imports: [MathChallengeComponent],
     }).compileComponents();
   });
 
@@ -17,16 +17,18 @@ describe('MathChallengeComponent', () => {
     const fixture = TestBed.createComponent(MathChallengeComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
-    expect(component.num1).toBeGreaterThan(0);
-    expect(component.num2).toBeGreaterThan(0);
-    expect(['+', '-', '*']).toContain(component.operator);
-    expect(component.expectedAnswer).toBeDefined();
+    expect(component.num1()).toBeGreaterThan(0);
+    expect(component.num2()).toBeGreaterThan(0);
+    expect(['+', '-', '*']).toContain(component.operator());
+    expect(component.expectedAnswer()).toBeDefined();
   });
 
   it('should disable Verify button when input is empty', () => {
     const fixture = TestBed.createComponent(MathChallengeComponent);
     fixture.detectChanges();
-    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('button.btn-primary');
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      'button.verify-btn'
+    );
     expect(btn.disabled).toBeTrue();
   });
 
@@ -36,7 +38,9 @@ describe('MathChallengeComponent', () => {
     const component = fixture.componentInstance;
     component.answerControl.setValue(42);
     fixture.detectChanges();
-    const btn: HTMLButtonElement = fixture.nativeElement.querySelector('button.btn-primary');
+    const btn: HTMLButtonElement = fixture.nativeElement.querySelector(
+      'button.verify-btn'
+    );
     expect(btn.disabled).toBeFalse();
   });
 
@@ -46,11 +50,11 @@ describe('MathChallengeComponent', () => {
     const component = fixture.componentInstance;
 
     spyOn(component.passed, 'emit');
-    component.answerControl.setValue(component.expectedAnswer);
+    component.answerControl.setValue(component.expectedAnswer());
     component.verify();
 
     expect(component.passed.emit).toHaveBeenCalledWith(true);
-    expect(component.hasError).toBeFalse();
+    expect(component.hasError()).toBeFalse();
   });
 
   it('should set hasError when the wrong answer is entered', () => {
@@ -59,11 +63,11 @@ describe('MathChallengeComponent', () => {
     const component = fixture.componentInstance;
 
     spyOn(component.passed, 'emit');
-    // Use a clearly wrong answer
-    component.answerControl.setValue(component.expectedAnswer + 999);
+    component.answerControl.setValue(component.expectedAnswer() + 999);
     component.verify();
 
-    expect(component.hasError).toBeTrue();
+    expect(component.hasError()).toBeTrue();
     expect(component.passed.emit).not.toHaveBeenCalled();
   });
 });
+
