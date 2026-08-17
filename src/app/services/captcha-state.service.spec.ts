@@ -8,7 +8,7 @@ describe('CaptchaStateService', () => {
   const mockStages: CaptchaStage[] = [
     { id: '1', type: 'math', passed: false },
     { id: '2', type: 'image', passed: false },
-    { id: '3', type: 'logic', passed: false }
+    { id: '3', type: 'logic', passed: false },
   ];
 
   beforeEach(() => {
@@ -34,11 +34,13 @@ describe('CaptchaStateService', () => {
       expect(service.score()).toBe(0);
     });
 
-    it('should persist state to localStorage', () => {
+    it('should persist state to localStorage', async () => {
       service.initializeStages(mockStages);
+      await service.flushSave();
       const saved = localStorage.getItem('angul_it_captcha_state');
       expect(saved).not.toBeNull();
-      const parsed = JSON.parse(saved!);
+      const wrapper = JSON.parse(saved!);
+      const parsed = JSON.parse(wrapper.data);
       expect(parsed.stages.length).toBe(3);
     });
   });
@@ -58,9 +60,9 @@ describe('CaptchaStateService', () => {
     });
 
     it('should mark isCompleted and calculate score when all stages done', () => {
-      service.completeCurrentStage(true, 100);  // stage 0
+      service.completeCurrentStage(true, 100); // stage 0
       service.completeCurrentStage(false, 200); // stage 1
-      service.completeCurrentStage(true, 300);  // stage 2
+      service.completeCurrentStage(true, 300); // stage 2
       expect(service.isCompleted()).toBeTrue();
       expect(service.score()).toBe(67); // 2/3 rounded
     });
@@ -91,9 +93,11 @@ describe('CaptchaStateService', () => {
   });
 
   describe('reset', () => {
-    it('should clear all state', () => {
+    it('should clear all state', async () => {
       service.initializeStages(mockStages);
+      await service.flushSave();
       service.reset();
+      await service.flushSave();
       expect(service.stages().length).toBe(0);
       expect(service.currentStageIndex()).toBe(0);
       expect(service.isCompleted()).toBeFalse();
@@ -103,17 +107,21 @@ describe('CaptchaStateService', () => {
   });
 
   describe('state persistence', () => {
-    it('should restore state from localStorage on construction', () => {
+    it('should restore state from localStorage on construction', async () => {
       service.initializeStages(mockStages);
       service.completeCurrentStage(true, 800);
+      await service.flushSave();
 
       // Re-create the service (simulate page refresh)
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({});
       const newService = TestBed.inject(CaptchaStateService);
+      await newService.initialize();
 
       expect(newService.stages().length).toBe(3);
       expect(newService.currentStageIndex()).toBe(1);
     });
   });
 });
+
+
